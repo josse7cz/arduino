@@ -1,0 +1,75 @@
+#include <dht.h>
+#include <LiquidCrystal.h>
+#include <DS1302.h>
+
+LiquidCrystal lcd(12, 11, 5, 4, 3, 2);
+
+dht DHT;
+int temp = 0;
+int hum = 0;
+int chk = 0;
+
+#define DHT11_PIN 7
+
+
+DS1302 rtc(8, 9, 10);
+void clockdate()
+{
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print(rtc.getDateStr(FORMAT_SHORT, FORMAT_LITTLEENDIAN, '.')); // check 1302 library and see FORMAT_BIGENDIAN:2010-01-01;FORMAT_LITTLEENDIAN:01-01-2010
+  lcd.setCursor(9, 0);
+  lcd.print(rtc.getDOWStr());
+  //Serial.print(rtc.getDOWStr());
+  lcd.setCursor(11, 0);
+  lcd.print(" ");
+  lcd.setCursor(12, 0);
+  lcd.print(temp);
+  lcd.print((char)223);
+  lcd.print("C");
+
+
+  lcd.setCursor(4, 1) ;
+  lcd.print(rtc.getTimeStr());
+}
+
+void setup() {//initializing of date and time, after setup you should be disable it rtc
+
+  lcd.begin(16, 2);
+  Serial.begin(9600); // open the serial port at 9600 bps
+  rtc.halt(false);
+  rtc.writeProtect(false);
+  rtc.setDOW(WEDNESDAY);
+  rtc.setTime(18, 48,00);
+  rtc.setDate(14, 10, 2020);
+  rtc.writeProtect(true);
+}
+
+//
+void meteo() {
+  lcd.clear();
+  chk = DHT.read11(DHT11_PIN);
+  lcd.setCursor(1, 0);
+  lcd.print("Teplota: ");
+  temp = DHT.temperature;
+  lcd.print(temp);
+  lcd.print((char)223);
+  lcd.print("C");
+  lcd.setCursor(1, 1);
+  lcd.print("Vlhkost: ");
+  hum = DHT.humidity;
+  lcd.print(hum);
+  lcd.print(" %");
+  //delay(10000);
+}
+//
+
+void loop() {
+  meteo();
+  delay(3000);
+
+  for (int t = 0; t < 10; t++) { //zobrazeni casu v sekundach
+    clockdate();
+    delay(1000);
+  }
+}
